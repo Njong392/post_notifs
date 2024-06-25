@@ -97,7 +97,14 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ]
-            : [],
+            : [
+                IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: signUserOut,
+                  tooltip: 'Log out',
+                  color: Colors.white,
+                ),
+              ],
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
