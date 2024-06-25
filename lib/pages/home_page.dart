@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:post_notifs/pages/login_page.dart';
 import 'package:post_notifs/pages/notifications_page.dart';
 import 'package:post_notifs/pages/packages_page.dart';
 import 'package:post_notifs/pages/settings_page.dart';
@@ -13,6 +14,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  String _currentFilter = 'all';
+  late final List<Widget> _pages;
 
   void _navigateBottomBar(int index) {
     setState(() {
@@ -20,15 +23,31 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  final List _pages = [PackagesPage(), NotificationsPage(), SettingsPage()];
+  void _updateFilter(String newFilter) {
+    setState(() {
+      _currentFilter = newFilter;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      PackagesPage(onFilteredChanged: _updateFilter, filter: _currentFilter),
+      NotificationsPage(),
+      SettingsPage()
+    ];
+  }
 
   final List<String> _titles = ['Packages', 'Notifications', 'Settings'];
 
   //final user = FirebaseAuth.instance.currentUser;
 
   // sign user out method
-  void signUserOut(){
+  void signUserOut() {
     FirebaseAuth.instance.signOut();
+    Navigator.of(context)
+        .pushReplacement(MaterialPageRoute(builder: (_) => LoginPage()));
   }
 
   @override
@@ -41,13 +60,44 @@ class _HomePageState extends State<HomePage> {
         ),
         backgroundColor: Colors.blue[800],
         elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: signUserOut,
-            icon: Icon(Icons.logout),
-            color: Colors.white,
-          ),
-        ],
+        actions: _selectedIndex == 0
+            ? [
+                Theme(
+                  data: Theme.of(context).copyWith(
+                    canvasColor:
+                        Colors.blue.shade800, // Dropdown background color
+                  ),
+                  child: DropdownButton<String>(
+                    value: _currentFilter,
+                    icon: const Icon(Icons.arrow_downward), // Dropdown icon
+                    iconEnabledColor: Colors.white, // Icon color
+                    iconSize: 24, // Icon size
+                    elevation: 16, // Shadow elevation
+                    style: const TextStyle(color: Colors.white), // Text style
+                    underline: Container(
+                      height: 2,
+                      color: Colors.blue.shade100, // Underline color
+                    ),
+                    onChanged: (value) {
+                      if (value != null) {
+                        _updateFilter(value);
+                        // Assuming PackagesPage can react to changes in its constructor parameter.
+                        (_pages[0] as PackagesPage)
+                            .onFilteredChanged
+                            ?.call(value);
+                      }
+                    },
+                    items: ['all', 'collected', 'Notcollected', 'resent']
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ]
+            : [],
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(

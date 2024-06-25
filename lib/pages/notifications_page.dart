@@ -6,9 +6,11 @@ class NotificationsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Padding(
+      
       padding: EdgeInsets.all(8.0),
       child: Column(
-        children: <Widget>[
+        
+        children: <Widget>[ 
           Card(
             child: ListTile(
               leading: Icon(Icons.notifications_sharp),
