@@ -81,10 +81,20 @@ class _PackagesPageState extends State<PackagesPage> {
     }
 
     packagesWithPostOfficeInfo.sort((a, b) {
+      DateTime now = DateTime.now();
       DateTime aDueCollectionDate = a['DueCollectionDate'].toDate();
       DateTime aDueResendDate = a['DueResendDate'].toDate();
       DateTime bDueCollectionDate = b['DueCollectionDate'].toDate();
       DateTime bDueResendDate = b['DueResendDate'].toDate();
+
+      bool aIsOverdue = (a['status'] != 'collected') &&
+          (aDueCollectionDate.isBefore(now) || aDueResendDate.isBefore(now));
+      bool bIsOverdue = (b['status'] != 'collected') &&
+          (bDueCollectionDate.isBefore(now) || bDueResendDate.isBefore(now));
+
+      if (aIsOverdue && !bIsOverdue) return -1;
+      if (!aIsOverdue && bIsOverdue) return 1;
+
       return aDueCollectionDate.compareTo(bDueCollectionDate) +
           aDueResendDate.compareTo(bDueResendDate);
     });
