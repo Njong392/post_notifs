@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:post_notifs/components/signin_button.dart';
 import 'package:post_notifs/components/square_tile.dart';
 import 'package:post_notifs/components/text_field.dart';
+import 'package:post_notifs/pages/login_page.dart';
 import 'package:post_notifs/services/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -34,15 +35,14 @@ class _RegisterPageState extends State<RegisterPage> {
 
     // try signing user up
     try {
-     if(passwordController.text == confirmPasswordController.text) {
-       await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text,
-        password: passwordController.text,
-      );
-   
-     } else {
+      if (passwordController.text == confirmPasswordController.text) {
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: emailController.text,
+          password: passwordController.text,
+        );
+      } else {
         showErrorMessage('Passwords do not match');
-     }
+      }
 
       // pop the loading circle
       Navigator.pop(context);
@@ -177,9 +177,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   // google sign in button
                   SquareTile(
-                    onTap: () => AuthService().signInWithGoogle(),
-                    imagePath: 'lib/assets/search.png'
-                  ),
+                      onTap: () => AuthService().signInWithGoogle(),
+                      imagePath: 'lib/assets/search.png'),
 
                   const SizedBox(
                     height: 50,
@@ -195,9 +194,20 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       const SizedBox(width: 4),
                       GestureDetector(
-                        onTap: widget.onTap,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LoginPage(
+                                onTap: () {
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ),
+                          );
+                        },
                         child: const Text(
-                          'Log in now',
+                          'Log in',
                           style: TextStyle(
                               color: Colors.blue, fontWeight: FontWeight.bold),
                         ),

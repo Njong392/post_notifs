@@ -5,10 +5,10 @@ import 'package:flutter/widgets.dart';
 import 'package:post_notifs/components/signin_button.dart';
 import 'package:post_notifs/components/square_tile.dart';
 import 'package:post_notifs/components/text_field.dart';
+import 'package:post_notifs/pages/register_page.dart';
 import 'package:post_notifs/services/auth_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-
 
 class LoginPage extends StatefulWidget {
   final Function()? onTap;
@@ -54,28 +54,26 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     // try signing in
-   try{
-     UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-      email: emailController.text,
-      password: passwordController.text,
-    );
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
 
-    // Get FCM token and save it to Firestore
+      // Get FCM token and save it to Firestore
       String? token = await _firebasemessaging.getToken();
       print('FCM Token: $token');
       await saveTokenToDatabase(userCredential.user!.uid, token);
 
-     // pop the loading circle
+      // pop the loading circle
+      Navigator.pop(context);
+    } on FirebaseAuthException catch (e) {
+      // pop the loading circle
       Navigator.pop(context);
 
-    
-   } on FirebaseAuthException catch(e){
-     // pop the loading circle
-      Navigator.pop(context);
-
-    // show error message
-    showErrorMessage(e.code);
-   }
+      // show error message
+      showErrorMessage(e.code);
+    }
   }
 
   Future<void> saveTokenToDatabase(String userId, String? token) async {
@@ -88,24 +86,21 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // error message popup
-  void showErrorMessage(String message){
+  void showErrorMessage(String message) {
     showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.blue[700],
-          title: Center(
-            child: Text(
-              message,
-              style: TextStyle(color:Colors.white),
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            backgroundColor: Colors.blue[700],
+            title: Center(
+              child: Text(
+                message,
+                style: TextStyle(color: Colors.white),
+              ),
             ),
-          ),
-        );
-      }
-    );
+          );
+        });
   }
-
-  
 
   @override
   Widget build(BuildContext context) {
@@ -123,11 +118,11 @@ class _LoginPageState extends State<LoginPage> {
                     size: 100,
                     color: Colors.blue[800],
                   ),
-              
+
                   const SizedBox(
                     height: 50,
                   ),
-              
+
                   // welcome text
                   Text(
                     'Welcome back you\'ve been missed',
@@ -136,50 +131,48 @@ class _LoginPageState extends State<LoginPage> {
                       fontSize: 16,
                     ),
                   ),
-              
+
                   const SizedBox(
                     height: 25,
                   ),
-              
+
                   // username textfield
                   MyTextfield(
                     controller: emailController,
                     hintText: 'Email',
                     obscureText: false,
                   ),
-              
+
                   const SizedBox(
                     height: 10,
                   ),
-              
+
                   // password textfield
                   MyTextfield(
                     controller: passwordController,
                     hintText: 'Password',
                     obscureText: true,
                   ),
-              
+
                   const SizedBox(
                     height: 25,
                   ),
-              
+
                   // sign in button
-                  SignInButton(
-                    text: 'Sign In',
-                    onTap: () => signUserIn()
-                  ),
-              
+                  SignInButton(text: 'Sign In', onTap: () => signUserIn()),
+
                   const SizedBox(
                     height: 50,
                   ),
-              
+
                   //or continue with
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 25.0),
                     child: Row(
                       children: [
                         Expanded(
-                          child: Divider(thickness: 0.5, color: Colors.grey[500]),
+                          child:
+                              Divider(thickness: 0.5, color: Colors.grey[500]),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -187,26 +180,26 @@ class _LoginPageState extends State<LoginPage> {
                               style: TextStyle(color: Colors.grey[700])),
                         ),
                         Expanded(
-                          child: Divider(thickness: 0.5, color: Colors.grey[400]),
+                          child:
+                              Divider(thickness: 0.5, color: Colors.grey[400]),
                         ),
                       ],
                     ),
                   ),
-              
+
                   const SizedBox(
                     height: 10,
                   ),
-              
+
                   // google sign in button
                   SquareTile(
-                    onTap: () => AuthService().signInWithGoogle(),
-                    imagePath: 'lib/assets/search.png'
-                    ),
-              
+                      onTap: () => AuthService().signInWithGoogle(),
+                      imagePath: 'lib/assets/search.png'),
+
                   const SizedBox(
                     height: 50,
                   ),
-              
+
                   // not a memeber?
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -217,7 +210,18 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(width: 4),
                       GestureDetector(
-                        onTap: widget.onTap,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RegisterPage(
+                                onTap: () {
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ),
+                          );
+                        },
                         child: const Text(
                           'Register now',
                           style: TextStyle(
