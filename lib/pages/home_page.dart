@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:post_notifs/pages/login_page.dart';
-import 'package:post_notifs/pages/notifications_page.dart';
 import 'package:post_notifs/pages/packages_page.dart';
 import 'package:post_notifs/pages/settings_page.dart';
 
@@ -34,12 +33,11 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _pages = [
       PackagesPage(onFilteredChanged: _updateFilter, filter: _currentFilter),
-      NotificationsPage(),
       SettingsPage()
     ];
   }
 
-  final List<String> _titles = ['Packages', 'Notifications', 'Settings'];
+  final List<String> _titles = ['Packages', 'Settings'];
 
   //final user = FirebaseAuth.instance.currentUser;
 
@@ -115,10 +113,6 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: 'Notifications',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings')
         ],

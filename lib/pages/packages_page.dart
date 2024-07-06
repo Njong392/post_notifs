@@ -15,7 +15,7 @@ class PackagesPage extends StatefulWidget {
 }
 
 class _PackagesPageState extends State<PackagesPage> {
-  late Future<List<DocumentSnapshot>> _packagesFuture;
+  late Future<List<Map<String, dynamic>>> _packagesFuture;
 
   @override
   void initState() {
@@ -33,7 +33,7 @@ class _PackagesPageState extends State<PackagesPage> {
     }
   }
 
-  Future<List<DocumentSnapshot>> fetchUserPackages(String filter) async {
+  Future<List<Map<String, dynamic>>> fetchUserPackages(String filter) async {
     User? currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) {
       return [];
@@ -59,114 +59,135 @@ class _PackagesPageState extends State<PackagesPage> {
 
     QuerySnapshot querySnapshot = await query.get();
 
-    List<DocumentSnapshot> sortedPackages = querySnapshot.docs;
-    sortedPackages.sort((a, b) {
+    List<Map<String, dynamic>> packagesWithPostOfficeInfo = [];
+
+    for (var packageDoc in querySnapshot.docs) {
+      var packageData = packageDoc.data() as Map<String, dynamic>;
+      var creatorId = packageData['creatorId'];
+
+      var postOfficeDoc = await FirebaseFirestore.instance
+          .collection('admin')
+          .doc(creatorId)
+          .get();
+
+      if (postOfficeDoc.exists) {
+        var postOfficeData = postOfficeDoc.data() as Map<String, dynamic>;
+
+        packageData['town'] = postOfficeData['town'];
+        packageData['phoneNumber'] = postOfficeData['phoneNumber'];
+      }
+
+      packagesWithPostOfficeInfo.add(packageData);
+    }
+
+    packagesWithPostOfficeInfo.sort((a, b) {
       DateTime aDueCollectionDate = a['DueCollectionDate'].toDate();
       DateTime aDueResendDate = a['DueResendDate'].toDate();
       DateTime bDueCollectionDate = b['DueCollectionDate'].toDate();
       DateTime bDueResendDate = b['DueResendDate'].toDate();
-      bool aIsOverdue = aDueCollectionDate.isBefore(DateTime.now()) ||
-          aDueResendDate.isBefore(DateTime.now());
-      bool bIsOverdue = bDueCollectionDate.isBefore(DateTime.now()) ||
-          bDueResendDate.isBefore(DateTime.now());
-
-      if (aIsOverdue && !bIsOverdue) {
-        return -1; // a comes before b because it is overdue and b is not
-      } else if (!aIsOverdue && bIsOverdue) {
-        return 1; // b comes before a because it is overdue and a is not
-      } else {
-        // If both are overdue or neither, sort by the earliest DueCollectionDate
-        int dueDateComparison =
-            aDueCollectionDate.compareTo(bDueCollectionDate);
-        if (dueDateComparison != 0) {
-          return dueDateComparison;
-        } else {
-          // If DueCollectionDate is the same, sort by DueResendDate
-          return aDueResendDate.compareTo(bDueResendDate);
-        }
-      }
+      return aDueCollectionDate.compareTo(bDueCollectionDate) +
+          aDueResendDate.compareTo(bDueResendDate);
     });
 
-    return sortedPackages;
+    return packagesWithPostOfficeInfo;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Packages'),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: widget.onFilteredChanged,
+            itemBuilder: (BuildContext context) {
+              return {'all', 'collected', 'NotCollected', 'resent'}
+                  .map((String choice) {
+                return PopupMenuItem<String>(
+                  value: choice,
+                  child: Text(choice),
+                );
+              }).toList();
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(10.0),
-        child: FutureBuilder<List<DocumentSnapshot>>(
+        child: FutureBuilder<List<Map<String, dynamic>>>(
           future: _packagesFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(child: Text('No packages found.'));
             } else {
+              List<Map<String, dynamic>> packages = snapshot.data!;
               return ListView.builder(
-                itemCount: snapshot.data!.length,
+                itemCount: packages.length,
                 itemBuilder: (context, index) {
-                  DocumentSnapshot package = snapshot.data![index];
+                  var package = packages[index];
                   DateTime dueCollectionDate =
                       package['DueCollectionDate'].toDate();
                   DateTime dueResendDate = package['DueResendDate'].toDate();
-
                   return Stack(
                     children: [
                       Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15.0),
-                        ),
                         elevation: 5,
-                        child: ListTile(
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: 25, vertical: 20),
-                          leading: Icon(
-                            Icons.card_giftcard,
-                            color: Colors.blue[700],
-                          ),
-                          title: Text(
-                            '${package['countryOfOrigin']}, ${package['senderContact']}',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue[700],
-                            ),
-                          ),
-                          subtitle: Padding(
-                            padding: const EdgeInsets.only(top: 15.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Due to be collected: ${DateFormat('dd/MM/yy').format(package['DueCollectionDate'].toDate())}',
-                                  style: TextStyle(fontSize: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(15.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'From: ${package['countryOfOrigin']}, ${package['senderContact']}',
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                'Due for collection: ${DateFormat('dd/MM/yy').format(dueCollectionDate)}',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                'Due for resend: ${DateFormat('dd/MM/yy').format(dueResendDate)}',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                'Date collected/resent: ${package['collectedOrResentDate'] == null ? '-' : DateFormat('dd/MM/yy').format(package['collectedOrResentDate'].toDate())}',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                'Category: ${package['category']}',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                'Post Office: ${package['town']}',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(height: 5),
+                              Text(
+                                'Phone Number: ${package['phoneNumber']}',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(height: 10),
+                              Chip(
+                                label: Text(
+                                  'Status: ${package['status']}',
+                                  style: TextStyle(color: Colors.white),
                                 ),
-                                SizedBox(height: 5),
-                                Text(
-                                  'Due to be resent: ${DateFormat('dd/MM/yy').format(package['DueResendDate'].toDate())}',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                SizedBox(height: 5),
-                                Text(
-                                  'Date collected/resent: ${package['collectedOrResentDate'] == null ? '-' : DateFormat('dd/MM/yy').format(package['collectedOrResentDate'].toDate())}',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                SizedBox(height: 5),
-                                Text(
-                                  'Category: ${package['category']}',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                SizedBox(height: 5),
-                                Chip(
-                                  label: Text(
-                                    'Status: ${package['status']}',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  backgroundColor: Colors.blue[700],
-                                ),
-                              ],
-                            ),
+                                backgroundColor: Colors.blue[700],
+                              ),
+                            ],
                           ),
                         ),
                       ),

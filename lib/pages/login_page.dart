@@ -1,10 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:post_notifs/components/signin_button.dart';
 import 'package:post_notifs/components/square_tile.dart';
 import 'package:post_notifs/components/text_field.dart';
 import 'package:post_notifs/services/auth_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 
 class LoginPage extends StatefulWidget {
   final Function()? onTap;
@@ -16,10 +20,26 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseMessaging _firebasemessaging = FirebaseMessaging.instance;
+
   // text editing controllers
   final emailController = TextEditingController();
-
   final passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    Firebase.initializeApp().whenComplete(() {
+      setState(() {});
+    });
+
+    _firebasemessaging.onTokenRefresh.listen((newToken) {
+      if (FirebaseAuth.instance.currentUser != null) {
+        saveTokenToDatabase(FirebaseAuth.instance.currentUser!.uid, newToken);
+      }
+    });
+  }
 
   // sign user in method
   void signUserIn() async {
@@ -35,10 +55,15 @@ class _LoginPageState extends State<LoginPage> {
 
     // try signing in
    try{
-     await FirebaseAuth.instance.signInWithEmailAndPassword(
+     UserCredential userCredential = await _auth.signInWithEmailAndPassword(
       email: emailController.text,
       password: passwordController.text,
     );
+
+    // Get FCM token and save it to Firestore
+      String? token = await _firebasemessaging.getToken();
+      print('FCM Token: $token');
+      await saveTokenToDatabase(userCredential.user!.uid, token);
 
      // pop the loading circle
       Navigator.pop(context);
@@ -51,6 +76,15 @@ class _LoginPageState extends State<LoginPage> {
     // show error message
     showErrorMessage(e.code);
    }
+  }
+
+  Future<void> saveTokenToDatabase(String userId, String? token) async {
+    if (token == null) return;
+
+    await FirebaseFirestore.instance.collection('users').doc(userId).set({
+      'token': token,
+      // Add any other user data here
+    }, SetOptions(merge: true));
   }
 
   // error message popup
