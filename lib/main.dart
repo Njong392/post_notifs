@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:post_notifs/pages/splash_screen.dart';
 import 'package:post_notifs/services/notification_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -17,6 +18,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  await dotenv.load(fileName: '.env');
   runApp(MyApp());
 }
 
