@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:post_notifs/pages/notifications_page.dart';
+import 'package:post_notifs/pages/login_page.dart';
 import 'package:post_notifs/pages/packages_page.dart';
 import 'package:post_notifs/pages/settings_page.dart';
 
@@ -13,6 +13,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  String _currentFilter = 'all';
+  late final List<Widget> _pages;
 
   void _navigateBottomBar(int index) {
     setState(() {
@@ -20,15 +22,28 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  final List _pages = [PackagesPage(), NotificationsPage(), SettingsPage()];
+  void _updateFilter(String newFilter) {
+    setState(() {
+      _currentFilter = newFilter;
+    });
+  }
 
-  final List<String> _titles = ['Packages', 'Notifications', 'Settings'];
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      PackagesPage(onFilteredChanged: _updateFilter, filter: _currentFilter),
+      SettingsPage()
+    ];
+  }
 
-  //final user = FirebaseAuth.instance.currentUser;
+  final List<String> _titles = ['Packages', 'Settings'];
 
   // sign user out method
-  void signUserOut(){
+  void signUserOut() {
     FirebaseAuth.instance.signOut();
+    Navigator.of(context)
+        .pushReplacement(MaterialPageRoute(builder: (_) => LoginPage()));
   }
 
   @override
@@ -41,13 +56,52 @@ class _HomePageState extends State<HomePage> {
         ),
         backgroundColor: Colors.blue[800],
         elevation: 0,
-        actions: [
-          IconButton(
-            onPressed: signUserOut,
-            icon: Icon(Icons.logout),
-            color: Colors.white,
-          ),
-        ],
+        actions: _selectedIndex == 0
+            ? [
+                Theme(
+                  data: Theme.of(context).copyWith(
+                    canvasColor:
+                        Colors.blue.shade800, // Dropdown background color
+                  ),
+                  child: DropdownButton<String>(
+                    value: _currentFilter,
+                    icon: const Icon(Icons.arrow_downward), // Dropdown icon
+                    iconEnabledColor: Colors.white, // Icon color
+                    iconSize: 24, // Icon size
+                    elevation: 16, // Shadow elevation
+                    style: const TextStyle(color: Colors.white), // Text style
+                    underline: Container(
+                      height: 2,
+                      color: Colors.blue.shade100, // Underline color
+                    ),
+                    onChanged: (value) {
+                      if (value != null) {
+                        _updateFilter(value);
+                        setState(() {
+                          _pages[0] = PackagesPage(
+                              onFilteredChanged: _updateFilter,
+                              filter: _currentFilter);
+                        });
+                      }
+                    },
+                    items: ['all', 'collected', 'NotCollected', 'resent']
+                        .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ]
+            : [
+                IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: signUserOut,
+                  tooltip: 'Log out',
+                  color: Colors.white,
+                ),
+              ],
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -58,10 +112,6 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: 'Notifications',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings')
         ],
