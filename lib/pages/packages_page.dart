@@ -95,23 +95,6 @@ class _PackagesPageState extends State<PackagesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Packages'),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: widget.onFilteredChanged,
-            itemBuilder: (BuildContext context) {
-              return {'all', 'collected', 'NotCollected', 'resent'}
-                  .map((String choice) {
-                return PopupMenuItem<String>(
-                  value: choice,
-                  child: Text(choice),
-                );
-              }).toList();
-            },
-          ),
-        ],
-      ),
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: FutureBuilder<List<Map<String, dynamic>>>(
@@ -144,11 +127,59 @@ class _PackagesPageState extends State<PackagesPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'From: ${package['countryOfOrigin']}, ${package['senderContact']}',
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '${package['countryOfOrigin']}, ${package['senderContact']}',
+                                      style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Chip(
+                                    label: Text(
+                                      'Status: ${package['status']}',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    backgroundColor: Colors.blue[700],
+                                  ),
+                                ],
                               ),
+                              SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Icon(Icons.location_on),
+                                  SizedBox(width: 5),
+                                  Expanded(
+                                    child: Text(
+                                      'Post Office: ${package['town']}',
+                                      style: TextStyle(fontSize: 16),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 5),
+                              Row(
+                                children: [
+                                  Icon(Icons.phone),
+                                  SizedBox(width: 5),
+                                  Expanded(
+                                    child: Text(
+                                      'Phone: ${package['phoneNumber']}',
+                                      style: TextStyle(fontSize: 16),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 10),
+                              Divider(),
                               SizedBox(height: 10),
                               Text(
                                 'Due for collection: ${DateFormat('dd/MM/yy').format(dueCollectionDate)}',
@@ -168,24 +199,6 @@ class _PackagesPageState extends State<PackagesPage> {
                               Text(
                                 'Category: ${package['category']}',
                                 style: TextStyle(fontSize: 16),
-                              ),
-                              SizedBox(height: 10),
-                              Text(
-                                'Post Office: ${package['town']}',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              SizedBox(height: 5),
-                              Text(
-                                'Phone Number: ${package['phoneNumber']}',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              SizedBox(height: 10),
-                              Chip(
-                                label: Text(
-                                  'Status: ${package['status']}',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                backgroundColor: Colors.blue[700],
                               ),
                             ],
                           ),
