@@ -63,11 +63,11 @@ class _PackagesPageState extends State<PackagesPage> {
 
     for (var packageDoc in querySnapshot.docs) {
       var packageData = packageDoc.data() as Map<String, dynamic>;
-      var creatorId = packageData['creatorId'];
+      var creatorID = packageData['creatorID'];
 
       var postOfficeDoc = await FirebaseFirestore.instance
           .collection('admin')
-          .doc(creatorId)
+          .doc(creatorID)
           .get();
 
       if (postOfficeDoc.exists) {

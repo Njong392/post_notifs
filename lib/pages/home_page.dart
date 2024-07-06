@@ -39,8 +39,6 @@ class _HomePageState extends State<HomePage> {
 
   final List<String> _titles = ['Packages', 'Settings'];
 
-  //final user = FirebaseAuth.instance.currentUser;
-
   // sign user out method
   void signUserOut() {
     FirebaseAuth.instance.signOut();
@@ -79,13 +77,14 @@ class _HomePageState extends State<HomePage> {
                     onChanged: (value) {
                       if (value != null) {
                         _updateFilter(value);
-                        // Assuming PackagesPage can react to changes in its constructor parameter.
-                        (_pages[0] as PackagesPage)
-                            .onFilteredChanged
-                            ?.call(value);
+                        setState(() {
+                          _pages[0] = PackagesPage(
+                              onFilteredChanged: _updateFilter,
+                              filter: _currentFilter);
+                        });
                       }
                     },
-                    items: ['all', 'collected', 'Notcollected', 'resent']
+                    items: ['all', 'collected', 'NotCollected', 'resent']
                         .map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
                         value: value,
