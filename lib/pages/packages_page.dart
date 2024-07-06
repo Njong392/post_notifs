@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:post_notifs/services/notification_service.dart';
 
 class PackagesPage extends StatefulWidget {
   final Function(String)? onFilteredChanged;
@@ -16,11 +17,13 @@ class PackagesPage extends StatefulWidget {
 
 class _PackagesPageState extends State<PackagesPage> {
   late Future<List<Map<String, dynamic>>> _packagesFuture;
+  final NotificationService _notificationService = NotificationService();
 
   @override
   void initState() {
     super.initState();
     _packagesFuture = fetchUserPackages(widget.filter);
+    _notificationService.init();
   }
 
   @override
@@ -63,11 +66,11 @@ class _PackagesPageState extends State<PackagesPage> {
 
     for (var packageDoc in querySnapshot.docs) {
       var packageData = packageDoc.data() as Map<String, dynamic>;
-      var creatorId = packageData['creatorId'];
+      var creatorID = packageData['creatorID'];
 
       var postOfficeDoc = await FirebaseFirestore.instance
           .collection('admin')
-          .doc(creatorId)
+          .doc(creatorID)
           .get();
 
       if (postOfficeDoc.exists) {
@@ -78,6 +81,7 @@ class _PackagesPageState extends State<PackagesPage> {
       }
 
       packagesWithPostOfficeInfo.add(packageData);
+      _checkForNotifications(packageData);
     }
 
     packagesWithPostOfficeInfo.sort((a, b) {
@@ -100,6 +104,39 @@ class _PackagesPageState extends State<PackagesPage> {
     });
 
     return packagesWithPostOfficeInfo;
+  }
+
+  void _checkForNotifications(Map<String, dynamic> package) {
+    DateTime now = DateTime.now();
+    DateTime dueCollectionDate = package['DueCollectionDate'].toDate();
+    DateTime dueResendDate = package['DueResendDate'].toDate();
+
+    if (package['status'] != 'collected') {
+      if (dueCollectionDate.isAtSameMomentAs(now.add(Duration(days: 2))) ||
+          dueResendDate.isAtSameMomentAs(now.add(Duration(days: 2)))) {
+        _notificationService.showNotification(
+          id: package.hashCode,
+          title: 'Package Reminder',
+          body: 'Your package is due for collection or resending in 2 days.',
+        );
+      }
+
+      if (dueCollectionDate.isBefore(now) || dueResendDate.isBefore(now)) {
+        _notificationService.showNotification(
+          id: package.hashCode,
+          title: 'Package Overdue',
+          body: 'Your package is overdue for collection or resending.',
+        );
+      }
+    }
+
+    if (package['status'] == 'resent') {
+      _notificationService.showNotification(
+        id: package.hashCode,
+        title: 'Package Resent',
+        body: 'Your package has been resent.',
+      );
+    }
   }
 
   @override
