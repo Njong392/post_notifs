@@ -16,7 +16,6 @@ import 'package:flutter/foundation.dart'
 /// );
 /// ```
 
-
 class DefaultFirebaseOptions {
   FirebaseOptions get currentPlatform {
     if (kIsWeb) {
@@ -52,40 +51,40 @@ class DefaultFirebaseOptions {
     storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET']!,
   );
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAvwTr3aswCSMhFC2-eLjQ6VA2xRHNfonk',
-    appId: '1:406762670130:android:c863294c9976782a34142b',
-    messagingSenderId: '406762670130',
-    projectId: 'post-notifs',
-    storageBucket: 'post-notifs.appspot.com',
+  final FirebaseOptions android = FirebaseOptions(
+    apiKey: dotenv.env['ANDROID_API_KEY']!,
+    appId: dotenv.env['ANDROID_APP_ID']!,
+    messagingSenderId: dotenv.env['ANDROID_MESSAGING_SENDER_ID']!,
+    projectId: dotenv.env['ANDROID_PROJECT_ID']!,
+    storageBucket: dotenv.env['ANDROID_STORAGE_BUCKET']!,
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAFZQQHka7FsbK_oSwcKTuspzOZ64kYzPQ',
-    appId: '1:406762670130:ios:39847047a1caf6d234142b',
-    messagingSenderId: '406762670130',
-    projectId: 'post-notifs',
-    storageBucket: 'post-notifs.appspot.com',
-    iosClientId: '406762670130-tf66249h4n1dc7gn7kevaqodq4ri0n86.apps.googleusercontent.com',
-    iosBundleId: 'com.example.postNotifs',
+  final FirebaseOptions ios = FirebaseOptions(
+    apiKey: dotenv.env['IOS_API_KEY']!,
+    appId: dotenv.env['IOS_APP_ID']!,
+    messagingSenderId: dotenv.env['IOS_MESSAGING_SENDER_ID']!,
+    projectId: dotenv.env['IOS_PROJECT_ID']!,
+    storageBucket: dotenv.env['IOS_STORAGE_BUCKET']!,
+    iosClientId: dotenv.env['IOS_CLIENT_ID']!,
+    iosBundleId: dotenv.env['IOS_BUNDLE_ID']!,
   );
 
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAFZQQHka7FsbK_oSwcKTuspzOZ64kYzPQ',
-    appId: '1:406762670130:ios:39847047a1caf6d234142b',
-    messagingSenderId: '406762670130',
-    projectId: 'post-notifs',
-    storageBucket: 'post-notifs.appspot.com',
-    iosClientId: '406762670130-tf66249h4n1dc7gn7kevaqodq4ri0n86.apps.googleusercontent.com',
-    iosBundleId: 'com.example.postNotifs',
+  final FirebaseOptions macos = FirebaseOptions(
+    apiKey: dotenv.env['MACOS_API_KEY']!,
+    appId: dotenv.env['MACOS_APP_ID']!,
+    messagingSenderId: dotenv.env['MACOS_MESSAGING_SENDER_ID']!,
+    projectId: dotenv.env['MACOS_PROJECT_ID']!,
+    storageBucket: dotenv.env['MACOS_STORAGE_BUCKET']!,
+    iosClientId: dotenv.env['MACOS_CLIENT_ID']!,
+    iosBundleId: dotenv.env['MACOS_BUNDLE_ID']!,
   );
 
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBYj5jJ2NgkFIqGsKh7o-PO2HiB_h6EDDQ',
-    appId: '1:406762670130:web:9c6414bd1a62443734142b',
-    messagingSenderId: '406762670130',
-    projectId: 'post-notifs',
-    authDomain: 'post-notifs.firebaseapp.com',
-    storageBucket: 'post-notifs.appspot.com',
+  final FirebaseOptions windows = FirebaseOptions(
+    apiKey: dotenv.env['WINDOWS_API_KEY']!,
+    appId: dotenv.env['WINDOWS_APP_ID']!,
+    messagingSenderId: dotenv.env['WINDOWS_MESSAGING_SENDER_ID']!,
+    projectId: dotenv.env['WINDOWS_PROJECT_ID']!,
+    authDomain: dotenv.env['WINDOWS_AUTH_DOMAIN']!,
+    storageBucket: dotenv.env['WINDOWS_STORAGE_BUCKET']!,
   );
 }
